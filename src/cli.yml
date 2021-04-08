@@ -1,0 +1,101 @@
+name: RC EDR verifier
+version: "0.1"
+author: dbogle
+about: A tool to generate EDR events
+args:
+    - command_file:
+        short: c
+        long: command_file
+        value_name: FILE
+        help: Specifies a series of operations to perform. The format of the command file is a json array
+        takes_value: true
+    - verbose:
+        short: v
+        multiple: true
+        help: Sets the level of verbosity
+subcommands:
+    - process:
+        about: Spawns a new process with the given arguments
+        args:
+            - FILE_PATH:
+                help: The path to the executable file that should be run
+                required: true
+            - arguments:
+                help: The arguments to pass to the executable
+                last: true
+                multiple: true
+    - network:
+        about: Sends some data on the network
+        args:
+            - host:
+                help: The host to connect to
+                required: true
+            - port:
+                help: The port number to connect to
+                required: true
+            - protocol:
+                help: The protocol to use. Currently only tcp and udp are supported
+                possible_values: [tcp, udp]
+                default_value: tcp
+            - data:
+                help: The data to send
+                default_value: Hello world
+            - base64_encoded:
+                short: e
+                long: encoded
+                help: Whether the data is base64 encoded or not
+
+    - file:
+        about: Performs various operations on files
+        args:
+            - FILE_PATH:
+                help: The path to the file to perform the operation on
+                required: true
+        subcommands:
+            - read:
+                about: Performs a read on the specified file
+                args:
+                    - FILE_PATH:
+                        help: The path to the file to perform the operation on
+                        required: true
+                    - num_bytes:
+                        help: The number of bytes to read from the file
+                    - offset:
+                        help: The offset at which to start reading from
+            - write:
+                about: Performs a write to the specified file
+                args:
+                    - FILE_PATH:
+                        help: The path to the file to perform the operation on
+                        required: true
+                    - offset:
+                        help: The offset at which to write at
+                    - data:
+                        help: The data to write to the file
+                        required: true
+                    - base64_encoded:
+                        short: e
+                        long: encoded
+                        help: Whether the data is base64 encoded or not
+            - delete:
+                about: Performs a delete on the specified file
+                args:
+                    - FILE_PATH:
+                        help: The path to the file to perform the operation on
+                        required: true
+            - create:
+                about: Creates a file at the given location
+                args:
+                    - FILE_PATH:
+                        help: The path to the file to perform the operation on
+                        required: true
+                    - data:
+                        help: The data to write to the file
+                        required: true
+                    - base64_encoded:
+                        short: e
+                        long: encoded
+                        help: Whether the data is base64 encoded or not
+
+
+
