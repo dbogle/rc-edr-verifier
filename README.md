@@ -19,13 +19,12 @@ This tool also accepts a json file of commands that it can execute. There can be
 ## Process creation
 ```
 {
-    type: process,
-    task_args: {
-        file_path: "/some/file/path",
-        args: [
+    "type": "process",
+    "args": {
+        "file_path": "/some/file/path",
+        "args": [
             "arg 1",
             "arg 2",
-            ...
         ]
     }
 }
@@ -34,13 +33,13 @@ This tool also accepts a json file of commands that it can execute. There can be
 ## Network traffic
 ```
 {
-    type: network,
-    task_args: {
-        host: "127.0.0.1",
-        port: 8080
-        protocol: [tcp | udp]
-        data: "ZHVycGR1cnBkdXJw"
-        base64_encoded: true
+    "type": "network",
+    "args": {
+        "host: "127.0.0.1",
+        "port: 8080,
+        "protocol": "tcp",
+        "data": "ZHVycGR1cnBkdXJw",
+        "b64_encoded": true
     }
 }
 ```
@@ -48,37 +47,37 @@ This tool also accepts a json file of commands that it can execute. There can be
 ### Create
 ```
 {
-    type: file,
-    file_path: "/some/file/path.txt",
-    task_args: {
-        command: create,
-        data: "ZHVycGR1cnBkdXJw"
-        base64_encoded: true
+    "type": "file",
+    "file_path": "/some/file/path.txt",
+    "args": {
+        "command": "create",
+        "data": "ZHVycGR1cnBkdXJw",
+        "b64_encoded": true
     }
 }
 ```
 ### Read
 ```
 {
-    type: file,
-    task_args: {
-        file_path: "/some/file/path",
-        command: read
-        start: 0 // The offset to start reading at
-        bytes_to_read: 100 // The maximum number of bytes to read or read until EOF
+    "type": "file",
+    "file_path": "/some/file/path",
+    "args": {
+        "command": "read",
+        "offset": 0,
+        "num_bytes": 100
     }
 }
 ```
 ### Write
 ```
 {
-    type: file,
-    task_args: {
-        file_path: "/some/file/path.jpg",
-        command: write,
-        start: 50 // The offset to start reading at,
-        data: "Some data to write to the file",
-        base64_encoded: false
+    "type": "file",
+    "args": {
+        "file_path": "/some/file/path.jpg",
+        "command": write,
+        "start": 50,
+        "data": "Some data to write to the file",
+        "b64_encoded": false
     }
 }
 ```
@@ -86,10 +85,10 @@ This tool also accepts a json file of commands that it can execute. There can be
 ### Delete
 ```
 {
-    type: file,
-    file_path: "/some/file/path.json",
-    task_args: {
-        command: delete,
+    "type": "file",
+    "file_path": "/some/file/path.json",
+    "args": {
+        "command": "delete"
     }
 }
 ```

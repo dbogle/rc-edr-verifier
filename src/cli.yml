@@ -5,7 +5,7 @@ about: A tool to generate EDR events
 args:
     - command_file:
         short: c
-        long: command_file
+        long: commands
         value_name: FILE
         help: Specifies a series of operations to perform. The format of the command file is a json array
         takes_value: true
@@ -44,58 +44,56 @@ subcommands:
                 short: e
                 long: encoded
                 help: Whether the data is base64 encoded or not
-
-    - file:
+    - createfile:
+        about: Creates a file at the specified location
+        args:
+            - FILE_PATH:
+                help: The path to the file to perform the operation on
+                required: true
+            - data:
+                help: The data to write to the file
+                required: true
+            - base64_encoded:
+                short: e
+                long: encoded
+                help: Whether the data is base64 encoded or not
+    - readfile:
         about: Performs various operations on files
         args:
             - FILE_PATH:
                 help: The path to the file to perform the operation on
                 required: true
-        subcommands:
-            - read:
-                about: Performs a read on the specified file
-                args:
-                    - FILE_PATH:
-                        help: The path to the file to perform the operation on
-                        required: true
-                    - num_bytes:
-                        help: The number of bytes to read from the file
-                    - offset:
-                        help: The offset at which to start reading from
-            - write:
-                about: Performs a write to the specified file
-                args:
-                    - FILE_PATH:
-                        help: The path to the file to perform the operation on
-                        required: true
-                    - offset:
-                        help: The offset at which to write at
-                    - data:
-                        help: The data to write to the file
-                        required: true
-                    - base64_encoded:
-                        short: e
-                        long: encoded
-                        help: Whether the data is base64 encoded or not
-            - delete:
-                about: Performs a delete on the specified file
-                args:
-                    - FILE_PATH:
-                        help: The path to the file to perform the operation on
-                        required: true
-            - create:
-                about: Creates a file at the given location
-                args:
-                    - FILE_PATH:
-                        help: The path to the file to perform the operation on
-                        required: true
-                    - data:
-                        help: The data to write to the file
-                        required: true
-                    - base64_encoded:
-                        short: e
-                        long: encoded
-                        help: Whether the data is base64 encoded or not
+            - num_bytes:
+                help: The number of bytes to read from the file
+            - offset:
+                help: The offset at which to start reading from
+                short: o
+                long: offset
+                takes_value: true
+    - writefile:
+        about: Writes to a file
+        args:
+            - FILE_PATH:
+                help: The path to the file to perform the operation on
+                required: true
+            - data:
+                help: The data to write to the file
+                required: true
+            - base64_encoded:
+                short: e
+                long: encoded
+                help: Whether the data is base64 encoded or not
+            - offset:
+                short: o
+                long: offset
+                help: The offset at which to write at
+                takes_value: true
+    - deletefile:
+        about: Deletes a file
+        args:
+            - FILE_PATH:
+                help: The path to the file to perform the operation on
+                required: true
 
 
 

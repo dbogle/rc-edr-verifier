@@ -1,6 +1,6 @@
 use std::process::Command;
 
-pub fn exec_file(filepath: &str, args: Vec<&str>) {
+pub fn exec_file(filepath: &str, args: &[&str]) {
     // TODO: Add logging here
     println!("Executing: {} {:?}", filepath, args);
     Command::new(filepath)
