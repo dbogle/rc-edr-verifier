@@ -1,17 +1,58 @@
 use std::io::prelude::*;
 use std::net::{TcpStream, UdpSocket};
+use std::time::SystemTime;
+use serde::{Deserialize, Serialize};
+use serde_json::json;
+use log::{info};
 
-pub fn send_data(host: &str, port: u16, proto: &str, data: &[u8]) {
+
+#[derive(Serialize, Deserialize)]
+struct NetworkTaskLog {
+    time: String,
+    username: String,
+    dest_addr: String,
+    dest_port: u16,
+    src_addr: String,
+    src_port: u16,
+    bytes_sent: u64,
+    protocol: String,
+    process_name: String,
+    process_cmd_line: String,
+    process_id: u32
+}
+
+pub fn send_data(host: &String, port: u16, proto: String, data: &[u8]) -> std::io::Result<()>{
+    let src_ip: String;
+    let src_port: String;
     if proto == "udp" {
-        let socket = UdpSocket::bind(("127.0.0.1", 12345)).expect("couldn't bind to address");
-        socket.send_to(data, (host, port)).expect("Failed to send data to host");
+        let socket = UdpSocket::bind(("127.0.0.1", 12345))?;
+        socket.send_to(data, (host.clone(), port))?;
+        src_ip = socket.local_addr().unwrap().ip().to_string();
+        src_port = socket.local_addr().unwrap().port().to_string();
     }
     else if proto == "tcp" {
-        let mut stream = TcpStream::connect((host, port)).expect("Failed to connect to host");
-        stream.write(data).expect("Failed to send data to host");
+        let mut stream = TcpStream::connect((host.clone(), port))?;
+        stream.write(data)?;
+        src_ip = stream.local_addr().unwrap().ip().to_string();
+        src_port = stream.local_addr().unwrap().port().to_string();
+        // The type of `john` is `serde_json::Value`
     }
     else {
         println!("Unsupported protocol: '{}'", proto);
+        return Err(std::io::Error::last_os_error());
     }
-    
+    let network_log = json!({
+        "time": SystemTime::now(),
+        "username": "dave",
+        "dest_addr": host,
+        "dest_port": port,
+        "src_addr": src_ip,
+        "src_port": src_port,
+        "bytes_sent": data.len(),
+        "protocol": proto,
+        "process_name": "rc",
+        "process_cmd_line": "stuff and stuff",
+        "process_id": 12345});
+    info!("{}", network_log);
+    return Ok(());
 }

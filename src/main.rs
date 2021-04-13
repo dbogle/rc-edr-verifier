@@ -1,57 +1,147 @@
+
 #[macro_use]
 extern crate clap;
 extern crate base64;
 
 mod ops;
-//use serde::{Deserialize, Serialize};
 use serde_json::{Value};
+use serde::{Deserialize, Serialize};
 use clap::App;
 use base64::{decode};
 use std::vec;
+use log::{error};
+use log4rs;
 
-// #[derive(Serialize, Deserialize)]
-// struct NetworkTask{
-//     typ: String,
-//     host: String,
-//     port: u16,
-//     protocol: String,
-//     data: String,
-//     b64_encoded: bool
-// }
+
+#[derive(Serialize, Deserialize)]
+struct NetworkTask {
+    host: String,
+    port: u16,
+    protocol: String,
+    data: String,
+    b64_encoded: bool
+}
+
+/*
+Network connection and data transmission
+Timestamp of activity
+Username that started the process that initiated the network activity
+Destination address and port
+Source address and port
+Amount of data sent
+Protocol of data sent
+Process name
+Process command line
+Process ID
+*/
+
+
+
+#[derive(Serialize, Deserialize)]
+struct ProcessTask {
+    filepath: String,
+    args: Vec<String>
+}
+
+#[derive(Serialize, Deserialize)]
+struct CreateFileTask {
+    filepath: String,
+    command: String,
+    data: String,
+    b64_encoded: bool
+}
+
+#[derive(Serialize, Deserialize)]
+struct ReadFileTask {
+    filepath: String,
+    command: String,
+    offset: u64,
+    num_bytes: usize
+}
+
+#[derive(Serialize, Deserialize)]
+struct WriteFileTask {
+    filepath: String,
+    command: String,
+    offset: u64,
+    data: String,
+    b64_encoded: bool
+}
+
+#[derive(Serialize, Deserialize)]
+struct DeleteFileTask {
+    filepath: String,
+    command: String,
+}
+
 
 fn main() {
     let yaml = load_yaml!("cli.yml");
+    log4rs::init_file("log.yaml", Default::default()).unwrap();
+
     let matches = App::from_yaml(yaml).get_matches();
 
     if let Some(commands) = matches.value_of("command_file") {
         if let Ok(json_data) = ops::fileops::read_file(commands, 0, 0) {
-            let durp: Value = serde_json::from_str(&json_data).unwrap();
-            for obj in durp.as_array() {
-                for task in obj {
+            let command_data: Value = serde_json::from_str(&json_data).unwrap();
+            for tasks in command_data.as_array() {
+                for task in tasks {
+                    let args = task["args"].clone();
                     if task["type"] == "file" {
-                        if task["args"]["command"] == "create" {
-                            ops::fileops::create_file(task["file_path"].as_str().unwrap(), task["args"]["data"].as_str().unwrap().as_bytes()).unwrap();
-                        } else if task["args"]["command"] == "write" {
-                            ops::fileops::write_file(task["file_path"].as_str().unwrap(),
-                                                     task["args"]["data"].as_str().unwrap().as_bytes(),
-                                                     task["args"]["offset"].as_str().unwrap().parse().unwrap()).unwrap();
-                        } else if task["args"]["command"] == "read" {
-                            ops::fileops::read_file(task["file_path"].as_str().unwrap(),
-                                                    task["args"]["offset"].as_str().unwrap().parse().unwrap(),
-                                                    task["args"]["num_bytes"].as_str().unwrap().parse().unwrap()).unwrap();
-                        } else if task["args"]["command"] == "delete" {
-                            ops::fileops::delete(task["file_path"].as_str().unwrap()).unwrap();
+                        if args["command"] == "create" {
+                            match serde_json::from_value::<CreateFileTask>(args) {
+                                Ok(c) => {
+                                    if ops::fileops::create_file(&c.filepath, c.data.as_bytes()).is_err() {
+                                        error!("Failed to create file");
+                                    }
+                                },
+                                Err(_) => {
+                                    error!("Failed to deserialize json into CreateFileTask");
+                                    continue;
+                                }
+                            };
+                        } else if args["command"] == "write" {
+                            let w: WriteFileTask = match serde_json::from_value(args) {
+                                Ok(w) => w,
+                                Err(_) => continue
+                            };
+                            if ops::fileops::write_file(&w.filepath, w.data.as_bytes(), w.offset).is_err() {
+                                error!("Failed to write file");
+                            }
+                        } else if args["command"] == "read" {
+                            let r: ReadFileTask = match serde_json::from_value(args) {
+                                Ok(r) => r,
+                                Err(_) => continue
+                            };
+                            match ops::fileops::read_file(&r.filepath, r.offset, r.num_bytes) {
+                                Ok(res) => println!("{}", res),
+                                Err(_) => continue
+                            };
+                        } else if args["command"] == "delete" {
+                            let d: DeleteFileTask = match serde_json::from_value(args) {
+                                Ok(d) => d,
+                                Err(_) => continue
+                            };
+                            if ops::fileops::delete(&d.filepath).is_err() {
+                                error!("Failed to delete file at '{}'", d.filepath);
+                            }
                         } else {
                             panic!("Invalid file command. Valid commands are 'create', 'write', 'read', 'delete'");
                         }
                     } else if task["type"] == "network" {
-                        ops::network::send_data(task["args"]["host"].as_str().unwrap(),
-                                                task["args"]["port"].as_u64().unwrap() as u16,
-                                                task["args"]["protocol"].as_str().unwrap(),
-                                                task["args"]["data"].as_str().unwrap().as_bytes());
+                        let n: NetworkTask = match serde_json::from_value(args) {
+                            Ok(n) => n,
+                            Err(_) => continue
+                        };
+                        if ops::network::send_data(&n.host, n.port, n.protocol, n.data.as_bytes()).is_err() {
+                            error!("Failed to send bytes on the network");
+                        }
                     } else if task["type"] == "process" {
-                        //let args = task["args"]["args"].as_array().unwrap();
-                        //ops::process::exec_file(task["args"]["file_path"].as_str().unwrap(), &args);
+                        let p: ProcessTask = match serde_json::from_value(args) {
+                            Ok(p) => p,
+                            Err(_) => continue
+                        };
+                        ops::process::exec_file2(&p.filepath, p.args);
                     } else {
                         panic!("Invalid task type. Availabel task type are 'process', 'network', and 'file'");
                     }
@@ -63,7 +153,7 @@ fn main() {
         if let Some(matches) = matches.subcommand_matches("process") {
             if let Some(filepath) = matches.value_of("FILE_PATH") {
                 if let Some(arguments) = matches.values_of("arguments") {
-                    let args: Vec<&str> = arguments.collect();
+                    let args: Vec<_> = arguments.collect();
                     ops::process::exec_file(filepath, &args);
                 } else {
                     ops::process::exec_file(filepath, &vec![]);
@@ -87,9 +177,13 @@ fn main() {
                 };
                 // TODO: Is there a better way to convert?
                 let decoded_data_bytes: &[u8] = &decoded_data;
-                ops::network::send_data(host, port, protocol, decoded_data_bytes);
+                if ops::network::send_data(&host.to_string(), port, protocol.to_string(), decoded_data_bytes).is_err() {
+                    error!("Failed to send bytes on the network");
+                }
             } else {
-                ops::network::send_data(host, port, protocol, data.as_bytes());
+                if ops::network::send_data(&host.to_string(), port, protocol.to_string(), data.as_bytes()).is_err() {
+                    error!("Failed to send bytes on the network");
+                }
             }
         } else if let Some(matches) = matches.subcommand_matches("readfile") {
             let filename = matches.value_of("FILE_PATH").unwrap();
