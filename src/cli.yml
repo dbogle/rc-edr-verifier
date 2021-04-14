@@ -40,10 +40,6 @@ subcommands:
             - data:
                 help: The data to send
                 default_value: Hello world
-            - base64_encoded:
-                short: e
-                long: encoded
-                help: Whether the data is base64 encoded or not
     - createfile:
         about: Creates a file at the specified location
         args:
@@ -53,10 +49,6 @@ subcommands:
             - data:
                 help: The data to write to the file
                 required: true
-            - base64_encoded:
-                short: e
-                long: encoded
-                help: Whether the data is base64 encoded or not
     - readfile:
         about: Performs various operations on files
         args:
@@ -79,10 +71,6 @@ subcommands:
             - data:
                 help: The data to write to the file
                 required: true
-            - base64_encoded:
-                short: e
-                long: encoded
-                help: Whether the data is base64 encoded or not
             - offset:
                 short: o
                 long: offset

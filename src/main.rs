@@ -8,14 +8,12 @@
 
 #[macro_use]
 extern crate clap;
-extern crate base64;
 
 mod ops;
 use log4rs;
 use std::vec;
 use std::path;
 use clap::App;
-use base64::{decode};
 use log::{info, error};
 use std::io::prelude::*;
 use serde_json::{Value};
@@ -26,8 +24,7 @@ struct NetworkTask {
     host: String,
     port: u16,
     protocol: String,
-    data: String,
-    b64_encoded: bool
+    data: String
 }
 
 #[derive(Serialize, Deserialize)]
@@ -40,8 +37,7 @@ struct ProcessTask {
 struct CreateFileTask {
     filepath: String,
     command: String,
-    data: String,
-    b64_encoded: bool
+    data: String
 }
 
 #[derive(Serialize, Deserialize)]
@@ -57,8 +53,7 @@ struct WriteFileTask {
     filepath: String,
     command: String,
     offset: u64,
-    data: String,
-    b64_encoded: bool
+    data: String
 }
 
 #[derive(Serialize, Deserialize)]
@@ -181,22 +176,8 @@ fn main() {
             let protocol = matches.value_of("protocol").unwrap_or("tcp");
 
             let data = matches.value_of("data").unwrap_or("Hello world\n");
-
-            if matches.is_present("base64_encoded") {
-                let decoded_data = match decode(&data) {
-                    Ok(decoded_data) => decoded_data,
-                    Err(_) =>  {
-                        error!("Failed to base64 decode data");
-                        return;
-                    }
-                };
-                if ops::network::send_data(&host.to_string(), port, protocol.to_string(), &decoded_data[..]).is_err() {
-                    error!("Failed to send bytes on the network");
-                }
-            } else {
-                if ops::network::send_data(&host.to_string(), port, protocol.to_string(), data.as_bytes()).is_err() {
-                    error!("Failed to send bytes on the network");
-                }
+            if ops::network::send_data(&host.to_string(), port, protocol.to_string(), data.as_bytes()).is_err() {
+                error!("Failed to send bytes on the network");
             }
         } else if let Some(matches) = matches.subcommand_matches("readfile") {
             let filename = matches.value_of("FILE_PATH").expect("Need to provide a filepath for readfile");
@@ -217,18 +198,7 @@ fn main() {
             let filename = matches.value_of("FILE_PATH").expect("Need to provide a file path for createfile");
 
             let data: &str = matches.value_of("data").unwrap_or("abcdefghijkl");
-            if matches.is_present("base64_encoded") {
-                let decoded_data = match decode(&data) {
-                    Ok(decoded_data) => decoded_data,
-                    Err(_) => {
-                        error!("Failed to base64 decode data");
-                        return;
-                    }
-                };
-                ops::fileops::create_file(filename, &decoded_data[..]).expect("Failed to create file");
-            } else {
-                ops::fileops::create_file(filename, data.as_bytes()).expect("Failed to create file");
-            }
+            ops::fileops::create_file(filename, data.as_bytes()).expect("Failed to create file");
         } else if let Some(matches) = matches.subcommand_matches("writefile") {
             // clap guarantees FILE_PATH to exist
             let filename = matches.value_of("FILE_PATH").expect("Need to provide a file path for writefile");
@@ -237,24 +207,10 @@ fn main() {
             let offset: u64 = offset_str.parse().unwrap_or(0);
 
             let data: &str = matches.value_of("data").unwrap_or("abcdefghijkl");
-            if matches.is_present("base64_encoded") {
-                let decoded_data = match decode(&data) {
-                    Ok(decoded_data) => decoded_data,
-                    Err(_) => {
-                        error!("Failed to base64 decode data");
-                        return;
-                    }
-                };
-                match ops::fileops::write_file(filename, &decoded_data[..], offset) {
+            match ops::fileops::write_file(filename, data.as_bytes(), offset) {
                     Err(e) => error!("Failed to write file: {}", e),
                     Ok(_) => ()
-                };
-            } else {
-                match ops::fileops::write_file(filename, data.as_bytes(), offset) {
-                    Err(e) => error!("Failed to write file: {}", e),
-                    Ok(_) => ()
-                };
-            }
+            };
         }
     }
 }

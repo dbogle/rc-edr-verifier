@@ -5,8 +5,7 @@
             "host": "127.0.0.1",
             "port": 8080,
             "protocol": "tcp",
-            "data": "This is some test data",
-            "b64_encoded": false
+            "data": "This is some test data"
         }
     },
     {
@@ -14,8 +13,7 @@
         "args": {
             "filepath": "./samplefile.txt",
             "command": "create",
-            "data": "ZHVycGR1cnBkdXJw",
-            "b64_encoded": true
+            "data": "ZHVycGR1cnBkdXJw"
         }
     },
     {

@@ -10,6 +10,5 @@ edition = "2018"
 clap = {version = "~2.33.3", features = ["yaml"]}
 serde = {version = "1.0.125", features = ["derive"]}
 serde_json = "1.0.64"
-base64 = "0.13.0"
 log = "0.4.14"
 log4rs = {version = "1.0.0", features = ["json_encoder", "console_appender", "file_appender", "threshold_filter"]}

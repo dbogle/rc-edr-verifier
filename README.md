@@ -48,8 +48,7 @@ This tool also accepts a json file of commands that it can execute. There can be
         "host": "127.0.0.1",
         "port": 8080,
         "protocol": "tcp",
-        "data": "This is some test data",
-        "b64_encoded": false
+        "data": "This is some test data"
     }
 }
 ```
@@ -61,8 +60,7 @@ This tool also accepts a json file of commands that it can execute. There can be
     "args": {
         "filepath": "/some/file/path.txt",
         "command": "create",
-        "data": "ZHVycGR1cnBkdXJw",
-        "b64_encoded": true
+        "data": "AAAAAAAAAAAAAAAAA"
     }
 }
 ```
@@ -86,8 +84,7 @@ This tool also accepts a json file of commands that it can execute. There can be
         "filepath": "/some/file/path.jpg",
         "command": write,
         "start": 50,
-        "data": "Some data to write to the file",
-        "b64_encoded": false
+        "data": "Some data to write to the file"
     }
 }
 ```

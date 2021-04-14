@@ -23,6 +23,14 @@ struct FileTaskLogEntry {
     process_id: u64
 }
 
+/// Reads a file at the specified path
+/// 
+/// # Arguments
+/// 
+/// * `filename` - The path to the file to create
+/// * `offset` - Thee offset to start reading from
+/// * `num_bytes` - The number of bytes to read
+/// 
 pub fn read_file(filename: &str, offset: u64, num_bytes: usize) -> io::Result<String> {
     let path = Path::new(filename);
     let mut f = File::open(path)?;
@@ -59,6 +67,13 @@ pub fn read_file(filename: &str, offset: u64, num_bytes: usize) -> io::Result<St
     }
 }
 
+/// Creates a file at the specified filepath
+/// 
+/// # Arguments
+/// 
+/// * `filepath` - The path to the file to create
+/// * `data` - The data to write to the file
+/// 
 pub fn create_file(filepath: &str, data: &[u8]) -> io::Result<()> {
     let mut f = File::create(filepath)?;
     let result = f.write_all(data);
@@ -77,6 +92,15 @@ pub fn create_file(filepath: &str, data: &[u8]) -> io::Result<()> {
     return result;
 }
 
+/// Writes data to the given file at the specified offset
+/// 
+/// # Arguments
+/// 
+/// * `filepath` - The path to the file to write the data to
+/// * `data` - The data to write to the file
+/// * `offset` - The offset at which to write the data at. If the offset is larger
+///              than the initial file size it will extend the filesize with zeros 
+/// 
 pub fn write_file(filepath: &str, data: &[u8], offset: u64) -> io::Result<()> {
     let path = Path::new(filepath);
     let mut f = OpenOptions::new()
@@ -101,6 +125,12 @@ pub fn write_file(filepath: &str, data: &[u8], offset: u64) -> io::Result<()> {
     return result;
 }
 
+/// Deletes a file or directory at the specified path
+/// 
+/// # Arguments
+/// 
+/// * `filename` - The path to the file to create
+/// 
 pub fn delete(filename: &str) -> io::Result<bool> {
     let f = File::open(filename)?;
     let meta = f.metadata()?;
