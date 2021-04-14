@@ -1,5 +1,5 @@
 name: RC EDR verifier
-version: "0.1"
+version: "0.1.0"
 author: dbogle
 about: A tool to generate EDR events
 args:

@@ -10,7 +10,7 @@ appenders:
     encoder:
       pattern: "{m}{n}"
 root:
-  level: warn
+  level: info
   appenders:
     - stdout
 loggers:

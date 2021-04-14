@@ -1,21 +1,25 @@
+/// main.rs handles dispatching tasks to the various parts of the program.
+/// 
+/// TODO/Future work
+/// - Add in more unit tests for the various tasks
+/// - Add in better compatibility with Windows
+/// - Make the exec_file function more generic so it can accept args of different types
+/// - Make the logging of events to the json file more generic and clean
 
 #[macro_use]
 extern crate clap;
 extern crate base64;
 
 mod ops;
-use serde_json::{Value};
-use serde::{Deserialize, Serialize};
+use log4rs;
+use std::vec;
+use std::path;
 use clap::App;
 use base64::{decode};
-use std::vec;
-use std::process::exit;
-use log::{error};
-use log4rs;
-use std::path;
+use log::{info, error};
 use std::io::prelude::*;
-
-
+use serde_json::{Value};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 struct NetworkTask {
@@ -25,21 +29,6 @@ struct NetworkTask {
     data: String,
     b64_encoded: bool
 }
-
-/*
-Network connection and data transmission
-Timestamp of activity
-Username that started the process that initiated the network activity
-Destination address and port
-Source address and port
-Amount of data sent
-Protocol of data sent
-Process name
-Process command line
-Process ID
-*/
-
-
 
 #[derive(Serialize, Deserialize)]
 struct ProcessTask {
@@ -83,7 +72,6 @@ fn process_commands(command_data: &serde_json::Value) {
         for task in tasks {
             let args = task["args"].clone();
             if task["type"] == "file" {
-                println!("Doing file task");
                 if args["command"] == "create" {
                     match serde_json::from_value::<CreateFileTask>(args) {
                         Ok(c) => {
@@ -110,7 +98,7 @@ fn process_commands(command_data: &serde_json::Value) {
                         Err(_) => continue
                     };
                     match ops::fileops::read_file(&r.filepath, r.offset, r.num_bytes) {
-                        Ok(res) => println!("{}", res),
+                        Ok(res) => info!("{}", res),
                         Err(_) => continue
                     };
                 } else if args["command"] == "delete" {
@@ -122,7 +110,7 @@ fn process_commands(command_data: &serde_json::Value) {
                         error!("Failed to delete file at '{}'", d.filepath);
                     }
                 } else {
-                    panic!("Invalid file command. Valid commands are 'create', 'write', 'read', 'delete'");
+                    error!("Invalid file command. Valid commands are 'create', 'write', 'read', 'delete'");
                 }
             } else if task["type"] == "network" {
                 let n: NetworkTask = match serde_json::from_value(args) {
@@ -139,7 +127,7 @@ fn process_commands(command_data: &serde_json::Value) {
                 };
                 ops::process::exec_file2(&p.filepath, p.args);
             } else {
-                panic!("Invalid task type. Availabel task type are 'process', 'network', and 'file'");
+                error!("Invalid task type. Available task types are 'process', 'network', and 'file'");
             }
         }
     }
@@ -162,7 +150,7 @@ fn main() {
     // Read in the command file and process any commands in it
     if let Some(commands) = matches.value_of("command_file") {
         let path = path::Path::new(commands);
-        let mut f = std::fs::File::open(path).unwrap();
+        let mut f = std::fs::File::open(path).expect("Failed to find the command file");
         let mut s = String::new();
         match f.read_to_string(&mut s) {
             Ok(_) => {
@@ -199,12 +187,10 @@ fn main() {
                     Ok(decoded_data) => decoded_data,
                     Err(_) =>  {
                         error!("Failed to base64 decode data");
-                        exit(1);
+                        return;
                     }
                 };
-                // TODO: Is there a better way to convert?
-                let decoded_data_bytes: &[u8] = &decoded_data;
-                if ops::network::send_data(&host.to_string(), port, protocol.to_string(), decoded_data_bytes).is_err() {
+                if ops::network::send_data(&host.to_string(), port, protocol.to_string(), &decoded_data[..]).is_err() {
                     error!("Failed to send bytes on the network");
                 }
             } else {
@@ -213,7 +199,7 @@ fn main() {
                 }
             }
         } else if let Some(matches) = matches.subcommand_matches("readfile") {
-            let filename = matches.value_of("FILE_PATH").unwrap();
+            let filename = matches.value_of("FILE_PATH").expect("Need to provide a filepath for readfile");
 
             let offset_str = matches.value_of("offset").unwrap_or("0");
             let offset: u64 = offset_str.parse().unwrap_or(0);
@@ -222,49 +208,50 @@ fn main() {
             let num_bytes: usize = num_bytes_str.parse().unwrap_or(0);
 
             if let Ok(data) = ops::fileops::read_file(filename, offset, num_bytes) {
-                println!("{}", data);
+                info!("{}", data);
             }
         } else if let Some(matches) = matches.subcommand_matches("deletefile") {
-            let filename = matches.value_of("FILE_PATH").unwrap();
+            let filename = matches.value_of("FILE_PATH").expect("Need to provide a file path for deletefile");
             ops::fileops::delete(filename).expect("Failed to delete file");
         } else if let Some(matches) = matches.subcommand_matches("createfile") {
-            let filename = matches.value_of("FILE_PATH").unwrap();
+            let filename = matches.value_of("FILE_PATH").expect("Need to provide a file path for createfile");
 
-            let data: &str = matches.value_of("data").unwrap();
+            let data: &str = matches.value_of("data").unwrap_or("abcdefghijkl");
             if matches.is_present("base64_encoded") {
-                println!("Its encoded");
                 let decoded_data = match decode(&data) {
                     Ok(decoded_data) => decoded_data,
-                    Err(_) => panic!("Failed to base64 decode data")
+                    Err(_) => {
+                        error!("Failed to base64 decode data");
+                        return;
+                    }
                 };
-                // TODO: Is there a better way to convert?
-                let decoded_data_bytes: &[u8] = &decoded_data;
-                ops::fileops::create_file(filename, decoded_data_bytes).expect("Failed to create file");
+                ops::fileops::create_file(filename, &decoded_data[..]).expect("Failed to create file");
             } else {
                 ops::fileops::create_file(filename, data.as_bytes()).expect("Failed to create file");
             }
         } else if let Some(matches) = matches.subcommand_matches("writefile") {
             // clap guarantees FILE_PATH to exist
-            let filename = matches.value_of("FILE_PATH").unwrap();
+            let filename = matches.value_of("FILE_PATH").expect("Need to provide a file path for writefile");
 
             let offset_str = matches.value_of("offset").unwrap_or("0");
             let offset: u64 = offset_str.parse().unwrap_or(0);
 
-            let data: &str = matches.value_of("data").unwrap();
+            let data: &str = matches.value_of("data").unwrap_or("abcdefghijkl");
             if matches.is_present("base64_encoded") {
                 let decoded_data = match decode(&data) {
                     Ok(decoded_data) => decoded_data,
-                    Err(_) => panic!("Failed to base64 decode data")
+                    Err(_) => {
+                        error!("Failed to base64 decode data");
+                        return;
+                    }
                 };
-                // TODO: Is there a better way to convert?
-                let decoded_data_bytes: &[u8] = &decoded_data;
-                match ops::fileops::write_file(filename, decoded_data_bytes, offset) {
-                    Err(e) => println!("Failed to write file: {}", e),
+                match ops::fileops::write_file(filename, &decoded_data[..], offset) {
+                    Err(e) => error!("Failed to write file: {}", e),
                     Ok(_) => ()
                 };
             } else {
                 match ops::fileops::write_file(filename, data.as_bytes(), offset) {
-                    Err(e) => println!("Failed to write file: {}", e),
+                    Err(e) => error!("Failed to write file: {}", e),
                     Ok(_) => ()
                 };
             }

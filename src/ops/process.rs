@@ -1,5 +1,5 @@
 use std::process::Command;
-use log::{info};
+use log::{info, error};
 use serde_json::json;
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
@@ -16,34 +16,33 @@ struct ProcessTaskLogEntry {
 }
 
 pub fn exec_file(filepath: &str, args: &[&str]) {
-    // TODO: Add logging here
-    let _proc = Command::new(filepath)
-                    .args(args)
-                    .spawn()
-                    .expect("Failed to run command");
-    let proc_log = json!({
-        "timestamp": SystemTime::now(),
-        "user": get_username(),
-        "process_name": env::args().nth(0),
-        "process_args": get_commandline_args(),
-        "process_id": std::process::id()
-    });
-    info!("{}", proc_log);
+    match Command::new(filepath).args(args).spawn() {
+        Ok(_) => {
+            let proc_log = json!({
+                "timestamp": SystemTime::now(),
+                "user": get_username(),
+                "process_name": env::args().nth(0),
+                "process_args": get_commandline_args(),
+                "process_id": std::process::id()
+            });
+            info!("{}", proc_log);
+        },
+        Err(err) => error!("Failed to execute process: {:?}", err.kind())
+    };
 }
 
 pub fn exec_file2(filepath: &str, args: Vec<String>) {
-    // TODO: Add logging here
-    println!("Executing: {} {:?}", filepath, args);
-    let _proc = Command::new(filepath)
-        .args(args)
-        .spawn()
-        .expect("Failed to run command");
-    let proc_log = json!({
-        "timestamp": SystemTime::now(),
-        "user": get_username(),
-        "process_name": env::args().nth(0),
-        "process_args": get_commandline_args(),
-        "process_id": std::process::id()
-    });
-    info!("{}", proc_log);
+    match Command::new(filepath).args(args).spawn() {
+        Ok(_) => {
+            let proc_log = json!({
+                "timestamp": SystemTime::now(),
+                "user": get_username(),
+                "process_name": env::args().nth(0),
+                "process_args": get_commandline_args(),
+                "process_id": std::process::id()
+            });
+            info!("{}", proc_log);
+        },
+        Err(err) => error!("Failed to execute process: {:?}", err.kind())
+    }
 }

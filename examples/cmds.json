@@ -1,0 +1,44 @@
+[
+    {
+        "type": "network",
+        "args": {
+            "host": "127.0.0.1",
+            "port": 8080,
+            "protocol": "tcp",
+            "data": "This is some test data",
+            "b64_encoded": false
+        }
+    },
+    {
+        "type": "file",
+        "args": {
+            "filepath": "./samplefile.txt",
+            "command": "create",
+            "data": "ZHVycGR1cnBkdXJw",
+            "b64_encoded": true
+        }
+    },
+    {
+        "type": "file",
+        "args": {
+            "filepath": "./samplefile.txt",
+            "command": "read",
+            "offset": 1,
+            "num_bytes": 0
+        }
+    },
+    {
+        "type": "file",
+        "args": {
+            "filepath": "./samplefile.txt",
+            "command": "delete"
+        }
+    },
+    {
+        "type": "process",
+        "args": {
+            "filepath": "/bin/ls",
+            "args": [".",  "/tmp"]
+        }
+    }
+]

@@ -1,6 +1,6 @@
 # rc-edr-verifier
 
-# Usage
+# RC
 This tool supports performing various actions on the system. The supported actions it can perform are
 * Process creation
 * File creation
@@ -9,11 +9,22 @@ This tool supports performing various actions on the system. The supported actio
 * File reading
 * Sending data on the network
 
-## Command line
-This tool can be run from the command line. Run the tools --help comand to see verbose output on command line use
+It has been tested on mac and linux but not windows although it should work on it. For each activity that it runs it generates a json object that is written to tasks.log.
+
+# Building
+In order to build the tool it is assumed you already have rust installed on your machine. If not please go to their site and install rustup
+To build the project simply run `cargo build` for debug mode or `cargo build --release` for a release build
+
+## Running from command line
+This tool can be run from the command line. Run the tools --help comand to see verbose output on command line use. The general usage is 
+`rc [FLAGS] [OPTIONS] [SUBCOMMAND]` where subcommands are the specific command you want to run. See examples below for how to run the tool
+`rc network 127.0.0.1 8080 tcp "My data to send"`
+`rc createfile ./somefile.txt "Data in the file"`
+`rc process /bin/ls -- -la /tmp`
+`rc readfile ./somefile.txt -o 20 100`
 
 ## Command file
-This tool also accepts a json file of commands that it can execute. There can be 1 or more commands specified in a single json array. The formats and accepted arguments are listed below 
+This tool also accepts a json file of commands that it can execute. There can be 1 or more commands specified in a single json array. The formats and accepted arguments are listed below. There is an file at examples/cmds.json that shows what that might look like
 
 # Command types
 ## Process creation
@@ -21,11 +32,8 @@ This tool also accepts a json file of commands that it can execute. There can be
 {
     "type": "process",
     "args": {
-        "file_path": "/some/file/path",
-        "args": [
-            "arg 1",
-            "arg 2",
-        ]
+        "filepath": "/some/file/path",
+        "args": ["arg 1", "arg 2", ...]
     }
 }
 ```
@@ -35,11 +43,11 @@ This tool also accepts a json file of commands that it can execute. There can be
 {
     "type": "network",
     "args": {
-        "host: "127.0.0.1",
-        "port: 8080,
+        "host": "127.0.0.1",
+        "port": 8080,
         "protocol": "tcp",
-        "data": "ZHVycGR1cnBkdXJw",
-        "b64_encoded": true
+        "data": "This is some test data",
+        "b64_encoded": false
     }
 }
 ```
@@ -48,8 +56,8 @@ This tool also accepts a json file of commands that it can execute. There can be
 ```
 {
     "type": "file",
-    "file_path": "/some/file/path.txt",
     "args": {
+        "filepath": "/some/file/path.txt",
         "command": "create",
         "data": "ZHVycGR1cnBkdXJw",
         "b64_encoded": true
@@ -60,8 +68,8 @@ This tool also accepts a json file of commands that it can execute. There can be
 ```
 {
     "type": "file",
-    "file_path": "/some/file/path",
     "args": {
+        "filepath": "/some/file/path",
         "command": "read",
         "offset": 0,
         "num_bytes": 100
@@ -73,7 +81,7 @@ This tool also accepts a json file of commands that it can execute. There can be
 {
     "type": "file",
     "args": {
-        "file_path": "/some/file/path.jpg",
+        "filepath": "/some/file/path.jpg",
         "command": write,
         "start": 50,
         "data": "Some data to write to the file",
@@ -86,8 +94,8 @@ This tool also accepts a json file of commands that it can execute. There can be
 ```
 {
     "type": "file",
-    "file_path": "/some/file/path.json",
     "args": {
+        "filepath": "/some/file/path.json",
         "command": "delete"
     }
 }

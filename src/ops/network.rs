@@ -4,7 +4,7 @@ use std::net::{TcpStream, UdpSocket};
 use std::time::SystemTime;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use log::{info};
+use log::{info, error};
 use std::env;
 
 
@@ -39,7 +39,7 @@ pub fn send_data(host: &String, port: u16, proto: String, data: &[u8]) -> std::i
         src_port = stream.local_addr().unwrap().port().to_string();
     }
     else {
-        println!("Unsupported protocol: '{}'", proto);
+        error!("Unsupported protocol: '{}'", proto);
         return Err(std::io::Error::last_os_error());
     }
     let network_log = json!({

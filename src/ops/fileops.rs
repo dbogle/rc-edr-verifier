@@ -1,17 +1,16 @@
-//use std::fs;
-use std::fs::{File, OpenOptions};
-use std::io;
-use std::io::prelude::*;
-//use std::os::unix;
-use std::path::Path;
-use std::fs;
-use std::io::SeekFrom;
-use log::{info};
-use serde_json::json;
-use serde::{Deserialize, Serialize};
-use std::time::SystemTime;
-use crate::ops::util::*;
 use std::env;
+use std::io;
+use std::fs;
+use std::path::Path;
+use serde_json::json;
+use std::io::SeekFrom;
+use log::{info, error};
+use std::io::prelude::*;
+use std::time::SystemTime;
+use std::fs::{File, OpenOptions};
+use serde::{Deserialize, Serialize};
+
+use crate::ops::util::*;
 
 #[derive(Serialize, Deserialize)]
 struct FileTaskLogEntry {
@@ -117,7 +116,7 @@ pub fn delete(filename: &str) -> io::Result<bool> {
     if meta.is_dir() {
         match fs::remove_dir_all(filename) {
             Err(why) => {
-                println!("remove_dir_all failed: {:?}", why.kind());
+                error!("remove_dir_all failed: {:?}", why.kind());
                 Err(why)
             },
             Ok(_) => {
@@ -128,7 +127,7 @@ pub fn delete(filename: &str) -> io::Result<bool> {
     } else {
         match fs::remove_file(filename) {
             Err(why) => {
-                println!("remove_file failed: {:?}", why.kind());
+                error!("remove_file failed: {:?}", why.kind());
                 Err(why)
             },
             Ok(_) => {
@@ -136,5 +135,21 @@ pub fn delete(filename: &str) -> io::Result<bool> {
                 Ok(true)
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_read_file() {
+        let filepath = String::from("./durpdurp.txt");
+        let data = String::from("Somedatainthefile");
+        let mut f = File::create(&filepath).unwrap();
+        f.write_all(data.as_bytes()).unwrap();
+        let read_data = read_file(&filepath, 0, data.len()).unwrap();
+        assert_eq!(read_data, data);
+        delete(&filepath).unwrap();
     }
 }
