@@ -1,6 +1,6 @@
 # rc-edr-verifier
 
-# RC
+## RC
 This tool supports performing various actions on the system. The supported actions it can perform are
 * Process creation
 * File creation
@@ -11,11 +11,11 @@ This tool supports performing various actions on the system. The supported actio
 
 It has been tested on mac and linux but not windows although it should work on it. For each activity that it runs it generates a json object that is written to tasks.log.
 
-# Building
+## Building
 In order to build the tool it is assumed you already have rust installed on your machine. If not please go to their site and install rustup
 To build the project simply run `cargo build` for debug mode or `cargo build --release` for a release build
 
-## Running from command line
+### Running from command line
 This tool can be run from the command line. Run the tools --help comand to see verbose output on command line use. The general usage is 
 `rc [FLAGS] [OPTIONS] [SUBCOMMAND]` where subcommands are the specific command you want to run. See examples below for how to run the tool
 ```
@@ -25,11 +25,11 @@ rc process /bin/ls -- -la /tmp
 rc readfile ./somefile.txt -o 20 100
 ```
 
-## Command file
+### Command file
 This tool also accepts a json file of commands that it can execute. There can be 1 or more commands specified in a single json array. The formats and accepted arguments are listed below. There is an file at examples/cmds.json that shows what that might look like
 
-# Command types
-## Process creation
+## Command types
+### Process creation
 ```
 {
     "type": "process",
@@ -40,7 +40,7 @@ This tool also accepts a json file of commands that it can execute. There can be
 }
 ```
 
-## Network traffic
+### Network traffic
 ```
 {
     "type": "network",
@@ -53,8 +53,8 @@ This tool also accepts a json file of commands that it can execute. There can be
     }
 }
 ```
-## File creation/modification
-### Create
+### File creation/modification
+#### Create
 ```
 {
     "type": "file",
@@ -66,7 +66,7 @@ This tool also accepts a json file of commands that it can execute. There can be
     }
 }
 ```
-### Read
+#### Read
 ```
 {
     "type": "file",
@@ -78,7 +78,7 @@ This tool also accepts a json file of commands that it can execute. There can be
     }
 }
 ```
-### Write
+#### Write
 ```
 {
     "type": "file",
@@ -92,7 +92,7 @@ This tool also accepts a json file of commands that it can execute. There can be
 }
 ```
 
-### Delete
+#### Delete
 ```
 {
     "type": "file",
