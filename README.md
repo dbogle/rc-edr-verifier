@@ -18,10 +18,12 @@ To build the project simply run `cargo build` for debug mode or `cargo build --r
 ## Running from command line
 This tool can be run from the command line. Run the tools --help comand to see verbose output on command line use. The general usage is 
 `rc [FLAGS] [OPTIONS] [SUBCOMMAND]` where subcommands are the specific command you want to run. See examples below for how to run the tool
-`rc network 127.0.0.1 8080 tcp "My data to send"`
-`rc createfile ./somefile.txt "Data in the file"`
-`rc process /bin/ls -- -la /tmp`
-`rc readfile ./somefile.txt -o 20 100`
+```
+rc network 127.0.0.1 8080 tcp "My data to send"
+rc createfile ./somefile.txt "Data in the file"
+rc process /bin/ls -- -la /tmp
+rc readfile ./somefile.txt -o 20 100
+```
 
 ## Command file
 This tool also accepts a json file of commands that it can execute. There can be 1 or more commands specified in a single json array. The formats and accepted arguments are listed below. There is an file at examples/cmds.json that shows what that might look like
